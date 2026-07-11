@@ -1,0 +1,30 @@
+# Секреты
+.env
+user_data/config.json
+user_data/config_backtest.json
+
+# Виртуальное окружение
+venv/
+
+# Данные и логи
+user_data/data/
+user_data/logs/
+user_data/backtest_results/
+user_data/hyperopt_results/
+user_data/notebooks/
+
+# Кэш Python
+__pycache__/
+*.pyc
+
+# Файлы параметров Hyperopt (могут содержать переобученные результаты)
+user_data/strategies/*.json
+
+# Прочее
+.vscode/
+*.log
+
+# База сделок и результаты
+tradesv3.dryrun.sqlite*
+user_data/*.json
+user_data/strategies/*.backup
