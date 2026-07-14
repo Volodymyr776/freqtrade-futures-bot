@@ -11,18 +11,19 @@
 
 ## Confirmed Baseline
 Локальная dry-run база копится с нуля с 09.07.2026
-VPS: LIVE с 13.07.2026, реальный баланс на Futures-кошельке ~200 USDT (50 USDT оставлено на споте)
+VPS: LIVE с 13.07.2026, реальный баланс на Futures-кошельке ~400 USDT (увеличен 13.07.2026, было ~200)
 Backtest 2024 (10 пар, дефолт, подтверждено 09.07.2026): +95.15% годовых, 65 сделок, 65W/0L
 Backtest 01.04-04.07.2026 (10 пар, дефолт): +7.64% (+76.423 USDT), 6 сделок, 5W/1L - выборка мала, ненадежна для выводов
 Активные short-условия: 501, 502, 542, 661 — все True (с 12.07.2026)
+Telegram-уведомления активны с 14.07.2026 (локально и на VPS)
 
 ## Key Files
-- user_data/config.json — основной конфиг (VPS: dry_run=false LIVE; локально: dry_run=true — НЕ синхронизировать это поле через git)
+- user_data/config.json — основной конфиг (VPS: dry_run=false LIVE; локально: dry_run=true — НЕ синхронизировать это поле через git; файл в .gitignore целиком)
 - user_data/config_backtest.json — конфиг для бэктеста/hyperopt (статический список пар)
 - user_data/strategies/NostalgiaForInfinityX7.py — стратегия
-- user_data/strategies/NostalgiaForInfinityX7.json — файл параметров Hyperopt (НЕ должен существовать сейчас — удалён, стратегия на дефолтах)
+- user_data/strategies/NostalgiaForInfinityX7.json — файл параметров Hyperopt (НЕ должен существовать сейчас — удалён, стратегия на дефолте)
 - user_data/logs/freqtrade.log — лог файл
-- .env — секреты (jwt_secret_key, ws_token, FreqUI password, Binance API key/secret) — НЕ хранить в config.json
+- .env — секреты (jwt_secret_key, ws_token, FreqUI password, Binance API key/secret, Telegram token/chat_id) — НЕ хранить в config.json
 - load_env.ps1 — загружает .env в сессию PowerShell перед запуском бота (локально)
 - run_bot.sh — обёртка авто-рестарта на VPS (использует set -a; source .env; set +a для экспорта переменных)
 
@@ -39,6 +40,7 @@ chcp 65001; $env:PYTHONIOENCODING="utf-8"; python -m freqtrade trade --config us
 - Автозапуск: crontab @reboot -> run_bot.sh
 - Внешний доступ к FreqUI: через SSH-туннель
 - ВАЖНО: перед запуском/остановкой бота всегда проверять pgrep -af freqtrade — были случаи дублирующихся процессов run_bot.sh/freqtrade, убивать только PID из freqtrade-futures-bot, никогда не трогать процесс из /home/ubuntu/NFI
+- ВАЖНО: при изменении .env на VPS недостаточно убить процесс freqtrade — run_bot.sh делает source .env только один раз до цикла while true. Нужно убить САМ процесс run_bot.sh (pgrep -af run_bot.sh), затем заново nohup ./run_bot.sh >> logs_wrapper.log 2>&1 &
 
 ## Roadmap
 - STEP 1: Установка и настройка — DONE (13.06.2026)
@@ -53,7 +55,12 @@ chcp 65001; $env:PYTHONIOENCODING="utf-8"; python -m freqtrade trade --config us
   - dry_run=false установлен НАПРЯМУЮ на VPS (не через git push - осознанное исключение из workflow)
   - Бот запущен, state RUNNING, heartbeat подтверждён
   - Осталось: удалить старый ключ binance_vamp, сменить jwt_secret_key (засветился в консоли), следить за ордерами напрямую на Binance первые дни
-- STEP 6: Масштабирование + Telegram + VPS
+- STEP 6: Масштабирование — ЗАВЕРШЕНО 14.07.2026
+  - Депозит увеличен пользователем до ~400 USDT на VPS (подхватилось автоматически, unlimited stake)
+  - Telegram настроен: бот @vVamPv_bot, enabled=true, notification_settings все on (entry/exit/status/warning/startup/protection_trigger)
+  - Секреты FREQTRADE__TELEGRAM__TOKEN / FREQTRADE__TELEGRAM__CHAT_ID в .env локально и на VPS
+  - Обнаружена особенность run_bot.sh (source .env один раз до цикла) — задокументирована в разделе VPS выше
+  - Опционально отложено: авто-сводка баланс/прибыль по расписанию, Binance Futures Testnet
 - STEP 7: FreqAI — дальняя цель
 
 ## Log Workflow
@@ -91,9 +98,10 @@ Next step: [что делать дальше]
 - ASCII-only внутри кода (без кириллицы в комментариях)
 
 ## Secrets Management
-- Все секреты (JWT secret, WS token, FreqUI password, Binance API key/secret) — ТОЛЬКО в .env
+- Все секреты (JWT secret, WS token, FreqUI password, Binance API key/secret, Telegram token/chat_id) — ТОЛЬКО в .env
 - config.json содержит пустые плейсхолдеры, заполняемые из env-переменных в рантайме
 - Переменные для Binance API: FREQTRADE__EXCHANGE__KEY / FREQTRADE__EXCHANGE__SECRET (нестандартные имена типа BINANCE_API_KEY не работают - Freqtrade их не распознаёт)
+- Переменные для Telegram: FREQTRADE__TELEGRAM__TOKEN / FREQTRADE__TELEGRAM__CHAT_ID
 - НИКОГДА не присылать значения секретов в чат, не присылать скриншоты с открытыми значениями .env
 - Перед запуском бота всегда выполнять .\load_env.ps1 (локально) / run_bot.sh грузит .env сам (VPS)
 
@@ -106,6 +114,7 @@ Next step: [что делать дальше]
 - API-ключ Binance, созданный ДО активации Futures-аккаунта, не может получить разрешение "Включить фьючерсы" — нужно создавать новый ключ после активации
 - "Multi-Asset Mode is not supported by freqtrade" — на Binance Futures USDT-M должен быть выбран "Режим одного актива", не "Режим мульти-активов"
 - nano: при сохранении .env всегда проверять имя файла в строке "File Name to Write" перед Enter — были случаи сохранения в файл с опечаткой вместо .env
+- run_bot.sh на VPS делает source .env только ОДИН РАЗ до цикла while true — простой kill процесса freqtrade НЕ подхватывает изменения .env, нужно убивать сам run_bot.sh и запускать заново
 
 ## Communication Rules
 - Язык: русский
