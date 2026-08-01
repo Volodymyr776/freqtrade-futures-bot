@@ -71,7 +71,7 @@ class NostalgiaForInfinityX7(IStrategy):
   INTERFACE_VERSION = 3
 
   def version(self) -> str:
-    return "v17.4.483"
+    return "v17.4.487"
 
   stoploss = -0.99
 
@@ -3170,57 +3170,22 @@ class NostalgiaForInfinityX7(IStrategy):
     return list(informative_pairs)
 
   @staticmethod
-  def rolling_sum(arr: np.ndarray, timeperiod: int) -> np.ndarray:
-    """
-    Compute a rolling sum over a fixed window size.
-
-    Returns an array where each element contains the sum of the
-    previous `timeperiod` values. Values before the first complete
-    window are set to NaN.
-
-    NaN values inside the input are treated as 0 to prevent a single
-    invalid candle from contaminating the entire rolling window.
-    """
-    arr = np.asarray(arr, dtype=np.float64)
-    out = np.full(arr.shape, np.nan, dtype=np.float64)
-    if arr.size < timeperiod:
-      return out
-
-    # Treat NaNs as 0 to avoid contaminating entire windows
-    arr_clean = np.nan_to_num(arr, nan=0.0)
-
-    csum = np.cumsum(arr_clean, dtype=np.float64)
-    csum[timeperiod:] = csum[timeperiod:] - csum[:-timeperiod]
-    out[timeperiod - 1 :] = csum[timeperiod - 1 :]
-
-    return out
-
-  @staticmethod
-  def chaikin_money_flow(
-    high: np.ndarray, low: np.ndarray, close: np.ndarray, volume: np.ndarray, timeperiod: int = 20
-  ) -> np.ndarray:
-    """
-    Candles where high == low are treated as neutral money flow (0)
-    to avoid NaN propagation.
-    """
+  def chaikin_money_flow(high, low, close, volume, timeperiod=20):
     hl_range = high - low
     mfm = np.zeros_like(close, dtype=np.float64)
-
     valid = hl_range != 0
     mfm[valid] = ((close[valid] - low[valid]) - (high[valid] - close[valid])) / hl_range[valid]
-
     mfv = mfm * volume
-    mfv_sum = __class__.rolling_sum(mfv, timeperiod)
 
-    # Use the same NaN-tolerant rolling_sum for volume as for mfv.
-    # ta.SUM propagates NaN for `timeperiod` candles after a single
-    # gap, while rolling_sum treats it as 0 — mixing the two meant
-    # the numerator and denominator could go out of sync after any
-    # data gap, silently producing NaN CMF for `timeperiod` candles
-    # even though the numerator alone was fine.
-    vol_sum = __class__.rolling_sum(volume, timeperiod)
+    stacked = np.vstack([mfv, volume])
+    stacked_clean = np.nan_to_num(stacked, nan=0.0)
+    csum = np.cumsum(stacked_clean, axis=1)
+    csum[:, timeperiod:] -= csum[:, :-timeperiod]
+
+    out = np.full(stacked.shape, np.nan, dtype=np.float64)
+    out[:, timeperiod - 1 :] = csum[:, timeperiod - 1 :]
+    mfv_sum, vol_sum = out[0], out[1]
     vol_sum = np.where(vol_sum == 0, np.nan, vol_sum)
-
     return mfv_sum / vol_sum
 
   @staticmethod
@@ -3515,6 +3480,7 @@ class NostalgiaForInfinityX7(IStrategy):
     ta_ema = ta.EMA
     ta_max = ta.MAX
     ta_min = ta.MIN
+    ta_bbands = ta.BBANDS
 
     assert dp, "DataProvider is required for multiple timeframes."
 
@@ -3541,6 +3507,8 @@ class NostalgiaForInfinityX7(IStrategy):
     rsi_3 = ta_rsi(close_np, timeperiod=3)
     rsi_14 = ta_rsi(close_np, timeperiod=14)
     aroon_down, aroon_up = ta_aroon(high_np, low_np, timeperiod=14)
+    bb_upper_20, _, bb_lower_20 = ta_bbands(close_np, timeperiod=20, nbdevup=2.0, nbdevdn=2.0, matype=0)
+    bbp_20 = (close_np - bb_lower_20) / np.where(bb_upper_20 - bb_lower_20 == 0, np.nan, bb_upper_20 - bb_lower_20)
 
     # =========================================================================
     # STOCH
@@ -3611,6 +3579,7 @@ class NostalgiaForInfinityX7(IStrategy):
         "RSI_14": rsi_14,
         "AROONU_14": aroon_up,
         "AROOND_14": aroon_down,
+        "BBP_20_2.0": bbp_20,
         "STOCHk_14_3_3": stoch_k,
         "STOCHRSIk_14_14_3_3": stochrsi_k,
         "KST_10_15_20_30_10_10_10_15": kst_main,
@@ -4116,11 +4085,13 @@ class NostalgiaForInfinityX7(IStrategy):
     willr_480 = ta_willr(high_np, low_np, close_np, timeperiod=480)
     roc_2 = ta_roc(close_np, timeperiod=2)
     roc_9 = ta_roc(close_np, timeperiod=9)
+    obv = ta.OBV(close_np, volume_np)
 
     # =========================================================================
     # CHANGE %
     # =========================================================================
     rsi_14_change = fast_pct_change(rsi_14)
+    obv_change = fast_pct_change(obv)
 
     # =========================================================================
     # CANDLE %
@@ -4184,6 +4155,7 @@ class NostalgiaForInfinityX7(IStrategy):
         "ROC_2": roc_2,
         "ROC_9": roc_9,
         "change_pct": change_pct,
+        "OBV_change_pct": obv_change,
         "close_delta": close_delta,
         "close_max_6": close_max_6,
         "close_max_12": close_max_12,
@@ -12954,8 +12926,10 @@ class NostalgiaForInfinityX7(IStrategy):
     mfi_14_15m = np_view("MFI_14_15m")
     mfi_14_1h = np_view("MFI_14_1h")
     num_empty_288 = np_view("num_empty_288")
-    protections_long_global = df["protections_long_global"]
-    protections_short_global = df["protections_short_global"]
+    protections_long_global = np_view("protections_long_global")
+    protections_short_global = np_view("protections_short_global")
+    global_protections_short_pump = np_view("global_protections_short_pump")
+    global_protections_short_dump = np_view("global_protections_short_dump")
     roc_2 = np_view("ROC_2")
     roc_9 = np_view("ROC_9")
     rsi_14 = np_view("RSI_14")
@@ -13012,7 +12986,6 @@ class NostalgiaForInfinityX7(IStrategy):
     bot_wick_pct_1d = np_view("bot_wick_pct_1d")
     low_min_12_1h = np_view("low_min_12_1h")
     low_min_30_1d = np_view("low_min_30_1d")
-    obv_change_pct_15m = np_view("OBV_change_pct_15m")
     rsi_14_change_pct_4h = np_view("RSI_14_change_pct_4h")
     rsi_3_change_pct_15m = np_view("RSI_3_change_pct_15m")
     close_max_6 = np_view("close_max_6")
@@ -25624,8 +25597,8 @@ class NostalgiaForInfinityX7(IStrategy):
           # Protections
           short_entry_logic.append(num_empty_288 <= allowed_empty_candles_288)
           short_entry_logic.append(protections_short_global == True)
-          short_entry_logic.append(df["global_protections_short_pump"] == True)
-          short_entry_logic.append(df["global_protections_short_dump"] == True)
+          short_entry_logic.append(global_protections_short_pump == True)
+          short_entry_logic.append(global_protections_short_dump == True)
 
           short_entry_logic.append(rsi_3_1h >= 5.0)
           short_entry_logic.append(rsi_3_4h >= 20.0)
@@ -26731,6 +26704,8 @@ class NostalgiaForInfinityX7(IStrategy):
             & ((rsi_3_15m_gt_10) | (rsi_3_4h_gt_25) | (rsi_3_1d_gt_35) | (stochrsi_k_1d_gt_20) | (stochrsi_k_1h_gt_30))
             # 15m & 4h & 1d down move, 1d low, 4h low
             & ((rsi_3_15m_gt_10) | (rsi_3_4h_gt_30) | (rsi_3_1d_gt_35) | (aroonu_14_1d_gt_10) | (stochrsi_k_4h_gt_30))
+            # 15m & 4h & 1d down move, 4h & 1d low
+            & ((rsi_3_15m_gt_10) | (rsi_3_4h_gt_30) | (rsi_3_1d_gt_40) | (aroonu_14_4h_gt_0) | (aroonu_14_1d_gt_30))
             # 15m & 4h down move, 15m & 4h low
             & ((rsi_3_15m_gt_10) | (rsi_3_4h_gt_30) | (aroonu_14_15m_gt_0) | (aroonu_14_4h_gt_0))
             # 15m & 4h down move, 15m low, 4h low
@@ -26861,6 +26836,8 @@ class NostalgiaForInfinityX7(IStrategy):
             & ((rsi_3_1h_gt_15) | (rsi_3_1d_gt_30) | (aroonu_14_15m_gt_0) | (aroonu_14_4h_gt_0) | (aroonu_14_1d_gt_0))
             # 1h down move, 15m & 4h low, 1h low
             & ((rsi_3_1h_gt_15) | (aroonu_14_15m_gt_0) | (aroonu_14_4h_gt_0) | (stochrsi_k_1h_gt_10))
+            # 1h down move, 15m low, 1h low
+            & ((rsi_3_1h_gt_15) | (aroonu_14_15m_gt_0) | (stochrsi_k_15m_gt_20) | (stochrsi_k_1h_gt_10))
             # 1h down move, 15m & 1h low
             & ((rsi_3_1h_gt_15) | (aroonu_14_15m_gt_20) | (aroonu_14_1h_gt_20))
             # 1h down move, 15m & 1h low, 1d oversold
@@ -26985,6 +26962,8 @@ class NostalgiaForInfinityX7(IStrategy):
             & ((rsi_3_1d_gt_20) | (stochrsi_k_1d_gt_10) | (roc_9_4h_gt_neg_30))
             # 1d down move, 15m & 1h & 1d low
             & ((rsi_3_1d_gt_25) | (aroonu_14_15m_gt_10) | (aroonu_14_1h_gt_10) | (aroonu_14_1d_gt_20))
+            # 1d down move, 1h low, 4h low
+            & ((rsi_3_1d_gt_25) | (aroonu_14_1h_gt_20) | (aroonu_14_4h_gt_0) | (stochrsi_k_1h_gt_20))
             # 1d down move, 15m & 4h low
             & ((rsi_3_1d_gt_25) | (stochrsi_k_15m_gt_10) | (stochrsi_k_4h_gt_10))
             # 1d down move, 15m & 1d low
