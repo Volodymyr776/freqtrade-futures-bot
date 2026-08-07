@@ -2,15 +2,21 @@
   "pairlists": [
     {
       "method": "VolumePairList",
-      "number_assets": 100,
+      "number_assets": 50,
       "sort_key": "quoteVolume",
+      "min_value": 0,
       "refresh_period": 1800
     },
-    { "method": "FullTradesFilter" },
-    { "method": "AgeFilter", "min_days_listed": 60 },
+    {
+      "method": "AgeFilter",
+      "min_days_listed": 10
+    },
+    {
+      "method": "PrecisionFilter"
+    },
     {
       "method": "PriceFilter",
-      "low_price_ratio": 0.003
+      "low_price_ratio": 0.01
     },
     {
       "method": "SpreadFilter",
@@ -22,11 +28,6 @@
       "min_rate_of_change": 0.03,
       "max_rate_of_change": 2.00,
       "refresh_period": 1800
-    },
-    {
-      "method": "VolumePairList",
-      "number_assets": 80,
-      "sort_key": "quoteVolume"
     }
   ]
 }
