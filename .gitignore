@@ -28,3 +28,6 @@ user_data/strategies/*.json
 tradesv3.dryrun.sqlite*
 user_data/*.json
 user_data/strategies/*.backup
+
+# Pairlist config - shared, not secret
+!user_data/config_pairlist.json
