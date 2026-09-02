@@ -31,3 +31,6 @@ user_data/strategies/*.backup
 
 # Pairlist config - shared, not secret
 !user_data/config_pairlist.json
+
+# Blacklist config - shared, not secret
+!user_data/config_blacklist.json
