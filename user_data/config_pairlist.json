@@ -12,9 +12,6 @@
       "min_days_listed": 10
     },
     {
-      "method": "PrecisionFilter"
-    },
-    {
       "method": "PriceFilter",
       "low_price_ratio": 0.01
     },
