@@ -43,6 +43,14 @@
       // hour (0.3785 -> 0.8542 -> 0.1456 -> 0.2002, +126% then -83%), 64 days since listing and
       // -72.8% off its high on ~$196M/day
       "(DOS)/.*",
+      // Falling knife, -96% off its high - STBL is on Binance perps at ~$67M/day (upstream 2026-10)
+      "(STBL)/.*",
+      // Huge-swing-flat-close day (63% range on 2026-10-15) that a 3-day RangeStabilityFilter misses; Binance perp (upstream 2026-10)
+      "(NXPC)/.*",
+      // Bridge exploit, 10M unauthorized CYS minted on 2026-10-17; Binance perp (upstream 2026-10)
+      "(CYS)/.*",
+      // Spot-only or no Binance perp, synced with upstream 2026-10: BLAST (L2 shutting down), IMO (UNCX exploit), AEON (bleed), QUBIC (chain halted)
+      "(BLAST|IMO|AEON|QUBIC)/.*",
       // Pump-and-dump knives — APR +192% then -68% (2026-08-12/15), VELVET -46% in an hour (2026-07-24),
       // JCT -82.4% off its 2026-06-13 peak, single-day ranges of 96%, 96% and 83% (2026-09-10)
       "(APR|JCT|VELVET)/.*",
