@@ -53,6 +53,8 @@
       "(BLAST|IMO|AEON|QUBIC)/.*",
       // Synced with upstream 2026-10-24: INIT (mainnet halted after exploit, Binance perp ~$46M/day), BTW (27-66% daily ranges, Binance perp ~$203M/day)
       "(INIT|BTW)/.*",
+      // Binance Monitoring Tag since 2026-10-09 (BICO, CVC: perps on Binance, slow bleed on thin book); spot-only or no Binance perp: BELIEVE (falling knife, gate only), NXT (thin dead book). Synced with upstream 2026-10-28
+      "(BICO|CVC|BELIEVE|NXT)/.*",
       // Pump-and-dump knives — APR +192% then -68% (2026-08-12/15), VELVET -46% in an hour (2026-07-24),
       // JCT -82.4% off its 2026-06-13 peak, single-day ranges of 96%, 96% and 83% (2026-09-10)
       "(APR|JCT|VELVET)/.*",
