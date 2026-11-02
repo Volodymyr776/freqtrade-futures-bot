@@ -59,6 +59,8 @@
       "(AAPU|AGPU|AGPUB|AGPUSTOCK|AMZU|CONL|CSOPSAMSUNG2L|CSOPSKHYNIX2L|GGLL|INTW|INTWB|INTWG|KORU|KORU3L|KORU3S|KORUB|KORUG|METU|MSFU|MSTU|MUU|MUU3L|MUU3S|MUUB|MUUG|MVLL|MVLLB|MVLLG|NVDL|QLD|SKDD|SKDDB|SKUU|SKUUB|SOXL3L|SOXL3S|SOXLB|SOXLG|SOXLON|SOXS|SOXS3L|SOXS3S|SOXSB|SOXSG|SOXSON|SPXL|TBT|TMF|TMFB|TSLL|TZA|UVXY|UVXYB)/.*",
       // Synced with upstream 2026-10-30: MITO (perps dropped by bybit and mexc, bleeding), TMX (bybit perp delisted), ZKL (zkLink bridge exploit), QUICK (binance spot ended)
       "(MITO|TMX|ZKL|QUICK)/.*",
+      // Synced with upstream 2026-11-02: ROLL, UAI (requested by upstream author, no reason given)
+      "(ROLL|UAI)/.*",
       // Pump-and-dump knives — APR +192% then -68% (2026-08-12/15), VELVET -46% in an hour (2026-07-24),
       // JCT -82.4% off its 2026-06-13 peak, single-day ranges of 96%, 96% and 83% (2026-09-10)
       "(APR|JCT|VELVET)/.*",
