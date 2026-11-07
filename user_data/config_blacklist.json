@@ -102,9 +102,9 @@
       // Leveraged ETF tokens (synced with author 2026-11-05: SNXX, STXX, RAM, SPCH, SSPC, BMNU, TQQQ/SQQQ venue tickers)
       "(BMNU|RAM|SNXX|SNXXB|SNXXG|SPCH|SQQQB|SSPC|STXX|TQQQB|TQQQG|TQQQON|TQQQX)/.*",
       // Synced with author 2026-11-06: CRDO, Q (reason not given)
-      "(CRDO|Q)/.*",
+      "(CRDO|DJT|MRNA|Q)/.*",
       // Binance spot tickers (bStocks, suffix B) of tokenized stocks/ETFs (synced with author 2026-11-06)
-      "(INTC|MRVL|AAOI|AAPL|ALAB|AMC|AMD|AMZN|ARM|ASTS|AVGO|BABA|BB|BE|COHR|CRDO|CRWV|DELL|EWY|GME|GOOGL|HOOD|IREN|LITE|META|MU|NBIS|ORCL|PLTR|QCOM|QQQ|SNDK|SPCX|SPY|TSLA|TSM)B/.*",
+      "(INTC|MRVL|AAOI|AAPL|ALAB|AMC|AMD|AMZN|ARM|ASTS|AVGO|BABA|BB|BE|COHR|CRDO|CRWV|DELL|DJT|EWY|GME|GOOGL|HOOD|IREN|LITE|META|MRNA|MU|NBIS|ORCL|PLTR|QCOM|QQQ|SNDK|SPCX|SPY|TSLA|TSM)B/.*",
       // Commodities (tokenized energy/metal perps — crypto gold XAUT/PAXG kept above)
       "(CL|BZ|NATGAS|XPT)/.*"
     ]
