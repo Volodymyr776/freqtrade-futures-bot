@@ -105,6 +105,10 @@
       "(CRDO|DJT|MRNA|Q)/.*",
       // Binance spot tickers (bStocks, suffix B) of tokenized stocks/ETFs (synced with author 2026-11-06)
       "(INTC|MRVL|AAOI|AAPL|ALAB|AMC|AMD|AMZN|ARM|ASTS|AVGO|BABA|BB|BE|COHR|CRDO|CRWV|DELL|DJT|EWY|GME|GOOGL|HOOD|IREN|LITE|META|MRNA|MU|NBIS|ORCL|PLTR|QCOM|QQQ|SNDK|SPCX|SPY|TSLA|TSM)B/.*",
+      // Pre-IPO perps (Binance PREMARKET), synced with author 2026-11-10
+      "(ANTHROPIC|MOONSHOT|OPENAI|OURA|POLYMARKET)/.*",
+      // Thin falling L2 gaming token, synced with author 2026-11-10
+      "(A8)/.*",
       // Commodities (tokenized energy/metal perps — crypto gold XAUT/PAXG kept above)
       "(CL|BZ|NATGAS|XPT)/.*"
     ]
