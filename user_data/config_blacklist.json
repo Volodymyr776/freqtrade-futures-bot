@@ -109,6 +109,10 @@
       "(ANTHROPIC|MOONSHOT|OPENAI|OURA|POLYMARKET)/.*",
       // Thin falling L2 gaming token, synced with author 2026-11-10
       "(A8)/.*",
+      // Protocol exploit (Kava Lend drained 2026-11-14), synced with author 2026-11-18
+      "(KAVA)/.*",
+      // Korean equity perps (Binance TRADIFI KR_EQUITY), synced with author 2026-11-18
+      "(HANMI|HYUNDAI|KAKAO|KIA|KODEX200|LGELECTRONICS|NAVER|SAMSUNG|SAMSUNGEM|SKHYNIX)/.*",
       // Commodities (tokenized energy/metal perps — crypto gold XAUT/PAXG kept above)
       "(CL|BZ|NATGAS|XPT)/.*"
     ]
